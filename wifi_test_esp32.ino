@@ -1,3 +1,14 @@
+/*
+https://docs.espressif.com/projects/esp-idf/en/latest/esp32/api-reference/system/system_time.html
+https://cplusplus.com/reference/ctime/tm/
+
+
+
+ESP32 time and wifi practice
+
+
+*/
+
 #include <WiFi.h>
 #include "time.h"
 
@@ -6,10 +17,10 @@ void initWiFi();
 int buffer_push(int);
 void buffer_reset();
 void do_protocol(int);
+void printLocalTime();
 
-
-const char* ssid = "jungbi-5g";
-const char* password = "0221134820";
+const char* ssid = "ASUS-SENDUST";
+const char* password = "0323420264a";
 
 unsigned long tm_now = millis();
 unsigned long tm_last_print = 0;
@@ -34,6 +45,22 @@ void setup() {
   Serial.print("  mili seconds");
   Serial.print("RRSI: ");
   Serial.println(WiFi.RSSI());
+
+  time_t now;
+  char strftime_buf[64];
+  struct tm * timeinfo;
+
+  time(&now);
+  // Set timezone to China Standard Time
+  setenv("TZ", "CST-8", 1);
+  tzset();
+  Serial.println("now variable is ");
+  Serial.println(now);
+  timeinfo = localtime(&now);
+  strftime(strftime_buf, sizeof(strftime_buf), "%c", timeinfo);
+  Serial.println("strftime_buf variable is ");
+  Serial.println(strftime_buf);
+
 }
 
 void loop() {
@@ -98,6 +125,15 @@ int printwifistatus()
   return wstatus;
 }
 
+void printLocalTime(){
+  struct tm timeinfo;
+  if(!getLocalTime(&timeinfo)){
+    Serial.println("Failed to obtain time 1");
+    return;
+  }
+  Serial.println(&timeinfo, "%A, %B %d %Y %H:%M:%S zone %Z %z ");
+}
+
 
 int buffer_push(int single_byte)
 {
@@ -125,11 +161,12 @@ void do_protocol(int cmd)
 {
   if (cmd == 49)      // select number 1
   {
-    Serial.println("You press number 1");
+    Serial.println("Number 1 pressed");
   }
 
   if (cmd == 50)      // select number 2
   {
-    Serial.println("You press number 1");
+    Serial.println("Number 2 pressed");
+    printLocalTime();
   }
 }
