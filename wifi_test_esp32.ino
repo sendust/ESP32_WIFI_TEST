@@ -1,8 +1,7 @@
 /*
 https://docs.espressif.com/projects/esp-idf/en/latest/esp32/api-reference/system/system_time.html
 https://cplusplus.com/reference/ctime/tm/
-
-
+https://cplusplus.com/reference/ctime/strftime/
 
 ESP32 time and wifi practice
 
@@ -25,19 +24,23 @@ const char* password = "0323420264a";
 unsigned long tm_now = millis();
 unsigned long tm_last_print = 0;
 unsigned long tm_last_wifiretry = 0;
- 
+bool led_status = false;
 const char* wifistatus[] = {"idle", "no ssid avail", "scan complete", "connected", "fail connect", "connect lost", "disconnected"};
-
+char strftime_buf[64];
 
 const char* ntpServer = "pool.ntp.org";
-uint8_t timeZone = 9;
-uint8_t summerTime = 0; // 3600
+const long  gmtOffset_sec = 0;
+const int   daylightOffset_sec = 3600;
+
+
 uint8_t sbuffer[20];
 uint8_t sbuffer_idx = 0;
 bool print_serial = false;
 
 void setup() {
   Serial.begin(115200);
+  pinMode(2, OUTPUT);
+  digitalWrite(2, led_status);
   unsigned long tm_start = millis();
   initWiFi();
   Serial.print("WIFI connecting... ");
@@ -45,21 +48,6 @@ void setup() {
   Serial.print("  mili seconds");
   Serial.print("RRSI: ");
   Serial.println(WiFi.RSSI());
-
-  time_t now;
-  char strftime_buf[64];
-  struct tm * timeinfo;
-
-  time(&now);
-  // Set timezone to China Standard Time
-  setenv("TZ", "CST-8", 1);
-  tzset();
-  Serial.println("now variable is ");
-  Serial.println(now);
-  timeinfo = localtime(&now);
-  strftime(strftime_buf, sizeof(strftime_buf), "%c", timeinfo);
-  Serial.println("strftime_buf variable is ");
-  Serial.println(strftime_buf);
 
 }
 
@@ -90,6 +78,17 @@ void loop() {
   tm_now = millis();
   if ((tm_now - tm_last_print) > 1000)
   {
+    led_status = !led_status;
+    digitalWrite(2, led_status);
+    time_t now;
+    struct tm * timeinfo;
+
+    time(&now);
+    timeinfo = localtime(&now);
+    strftime(strftime_buf, sizeof(strftime_buf), "%c", timeinfo);
+    Serial.println("strftime_buf variable is ");
+    Serial.println(strftime_buf);
+    
     if ((printwifistatus() != WL_CONNECTED) && ((tm_now - tm_last_wifiretry) > 5000))
       {
         WiFi.begin(ssid, password);
@@ -161,7 +160,8 @@ void do_protocol(int cmd)
 {
   if (cmd == 49)      // select number 1
   {
-    Serial.println("Number 1 pressed");
+    Serial.println("Number 1 pressed\r\nconfig Time");
+    configTime(gmtOffset_sec, daylightOffset_sec, ntpServer);
   }
 
   if (cmd == 50)      // select number 2
