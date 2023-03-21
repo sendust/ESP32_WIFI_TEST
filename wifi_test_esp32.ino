@@ -19,7 +19,7 @@ void do_protocol(int);
 void printLocalTime();
 
 const char* ssid = "ASUS-SENDUST";
-const char* password = "0323420264a";
+const char* password = "--------";
 
 unsigned long tm_now = millis();
 unsigned long tm_last_print = 0;
